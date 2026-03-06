@@ -69,7 +69,7 @@ def _scan_osm(coords: Coordinates, radius_km: float) -> list[Cafe]:
                 name=tags.get("name", "Unknown"),
                 address=tags.get("addr:street", "N/A"),
                 coordinates=Coordinates(lat=lat, lng=lng),
-                tags=list(tags.keys()),
+                tags=tags,
             )
         )
     return cafes

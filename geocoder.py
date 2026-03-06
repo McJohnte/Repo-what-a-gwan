@@ -6,6 +6,14 @@ from models import Coordinates
 
 def geocode(location: str, provider: str = "google") -> Coordinates:
     """Convert a location string into geographic coordinates."""
+    # Support raw "lat,lng" input to skip API calls
+    parts = location.split(",")
+    if len(parts) == 2:
+        try:
+            return Coordinates(lat=float(parts[0].strip()), lng=float(parts[1].strip()))
+        except ValueError:
+            pass  # Not numeric — treat as a place name
+
     if provider == "google":
         return _geocode_google(location)
     return _geocode_osm(location)
