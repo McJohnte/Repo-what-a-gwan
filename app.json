@@ -1,0 +1,27 @@
+{
+  "id": "a8f3c2e1-9d4b-4f6a-b1c7-2e5d8a0f3b6c",
+  "name": "Sum Two Numbers",
+  "publisher": "Repo-what-a-gwan",
+  "version": "1.0.0.0",
+  "brief": "Sums two numbers",
+  "description": "A simple Business Central extension that adds two numbers together.",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "23.0.0.0",
+  "application": "23.0.0.0",
+  "idRanges": [
+    {
+      "from": 50100,
+      "to": 50149
+    }
+  ],
+  "runtime": "12.0",
+  "features": [
+    "NoImplicitWith"
+  ]
+}
