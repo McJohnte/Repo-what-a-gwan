@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attachment Host</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --accent: #38bdf8;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+    p.sub { margin: 0 0 1.5rem; color: var(--muted); font-size: .9rem; }
+    .wrap { width: 100%; max-width: 720px; }
+    #drop {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      background: var(--panel);
+    }
+    #drop.hover { border-color: var(--accent); background: #243449; }
+    #drop strong { color: var(--accent); }
+    #drop small { display: block; margin-top: .5rem; color: var(--muted); }
+    input[type=file] { display: none; }
+    ul.files { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+    li.file {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      margin-bottom: .6rem;
+    }
+    .thumb {
+      width: 48px; height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #0b1220;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .meta { flex: 1; min-width: 0; }
+    .meta .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta .size { font-size: .8rem; color: var(--muted); }
+    .actions { display: flex; gap: .4rem; flex-shrink: 0; }
+    button, a.btn {
+      font: inherit;
+      font-size: .82rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: .4rem .7rem;
+      border-radius: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+    button:hover, a.btn:hover { border-color: var(--accent); background: #243449; }
+    .remove { color: #f87171; }
+    .empty { color: var(--muted); text-align: center; margin-top: 1.25rem; font-size: .9rem; }
+    footer { margin-top: auto; padding-top: 2rem; color: var(--muted); font-size: .75rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📎 Attachment Host</h1>
+    <p class="sub">Add files to preview, download, and copy a shareable link. Everything stays in your browser — nothing is uploaded.</p>
+
+    <label id="drop" for="picker">
+      <strong>Click to choose files</strong> or drag &amp; drop them here
+      <small>Images, PDFs, documents, archives — any file type</small>
+    </label>
+    <input type="file" id="picker" multiple />
+
+    <ul class="files" id="list"></ul>
+    <p class="empty" id="empty">No attachments yet.</p>
+  </div>
+
+  <footer>Self-contained static page · works offline · open <code>index.html</code> in any browser</footer>
+
+  <script>
+    const drop = document.getElementById('drop');
+    const picker = document.getElementById('picker');
+    const list = document.getElementById('list');
+    const empty = document.getElementById('empty');
+
+    // Track object URLs so we can revoke them when a file is removed.
+    const urls = new Map();
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return (bytes / Math.pow(1024, i)).toFixed(i ? 1 : 0) + ' ' + units[i];
+    }
+
+    function iconFor(type) {
+      if (type.startsWith('audio/')) return '🎵';
+      if (type.startsWith('video/')) return '🎬';
+      if (type === 'application/pdf') return '📄';
+      if (type.includes('zip') || type.includes('compressed')) return '🗜️';
+      if (type.startsWith('text/')) return '📝';
+      return '📁';
+    }
+
+    function addFile(file) {
+      const url = URL.createObjectURL(file);
+      const li = document.createElement('li');
+      li.className = 'file';
+
+      // Thumbnail: real image preview when possible, otherwise an emoji icon.
+      let thumb;
+      if (file.type.startsWith('image/')) {
+        thumb = document.createElement('img');
+        thumb.className = 'thumb';
+        thumb.src = url;
+        thumb.alt = file.name;
+      } else {
+        thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        thumb.textContent = iconFor(file.type);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = file.name;
+      const size = document.createElement('div');
+      size.className = 'size';
+      size.textContent = formatSize(file.size) + (file.type ? ' · ' + file.type : '');
+      meta.append(name, size);
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const open = document.createElement('a');
+      open.className = 'btn';
+      open.href = url;
+      open.target = '_blank';
+      open.rel = 'noopener';
+      open.textContent = 'Open';
+
+      const download = document.createElement('a');
+      download.className = 'btn';
+      download.href = url;
+      download.download = file.name;
+      download.textContent = 'Download';
+
+      const copy = document.createElement('button');
+      copy.textContent = 'Copy link';
+      copy.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          copy.textContent = 'Copied!';
+          setTimeout(() => (copy.textContent = 'Copy link'), 1200);
+        } catch {
+          copy.textContent = url;
+        }
+      };
+
+      const remove = document.createElement('button');
+      remove.className = 'remove';
+      remove.textContent = 'Remove';
+      remove.onclick = () => {
+        URL.revokeObjectURL(url);
+        urls.delete(li);
+        li.remove();
+        toggleEmpty();
+      };
+
+      actions.append(open, download, copy, remove);
+      li.append(thumb, meta, actions);
+      list.appendChild(li);
+      urls.set(li, url);
+      toggleEmpty();
+    }
+
+    function toggleEmpty() {
+      empty.style.display = list.children.length ? 'none' : 'block';
+    }
+
+    function handleFiles(fileList) {
+      Array.from(fileList).forEach(addFile);
+    }
+
+    picker.addEventListener('change', e => handleFiles(e.target.files));
+
+    ['dragenter', 'dragover'].forEach(evt =>
+      drop.addEventListener(evt, e => { e.preventDefault(); drop.classList.add('hover'); })
+    );
+    ['dragleave', 'drop'].forEach(evt =>
+      drop.addEventListener(evt, e => { e.preventDefault(); drop.classList.remove('hover'); })
+    );
+    drop.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+    });
+  </script>
+</body>
+</html>
