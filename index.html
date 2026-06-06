@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What A Gwan?</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <h1 class="header__title">What A Gwan? <span aria-hidden="true">🌴</span></h1>
+    <p class="header__tagline">Drop a quick update — what's going on right now?</p>
+  </header>
+
+  <main class="container">
+    <form id="post-form" class="post-form" autocomplete="off">
+      <label class="visually-hidden" for="post-input">Your status</label>
+      <input
+        id="post-input"
+        class="post-form__input"
+        type="text"
+        name="status"
+        maxlength="140"
+        placeholder="So… what a gwan?"
+        required
+      />
+      <button class="post-form__button" type="submit">Post</button>
+      <span id="char-count" class="post-form__count" aria-live="polite">140</span>
+    </form>
+
+    <ul id="feed" class="feed" aria-live="polite"></ul>
+    <p id="empty-state" class="empty-state" hidden>Nothing a gwan yet. Be the first to post! 👀</p>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
