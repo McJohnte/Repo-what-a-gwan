@@ -1,2 +1,5 @@
 def sum_even_numbers(numbers):
-    return sum(n for n in numbers if n % 2 == 0)
+    return sum(
+        n for n in numbers
+        if isinstance(n, int) and not isinstance(n, bool) and n % 2 == 0
+    )
